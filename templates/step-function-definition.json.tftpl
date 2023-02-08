@@ -1,0 +1,163 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "BagIt To DRI SIP",
+  "States": {
+    "BagIt To DRI SIP": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "Payload.$": "$",
+        "FunctionName": "${arn_lambda_dpsg_bagit_to_dri_sip}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "Bagit-dri-sip Output Handler",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.TaskFailed"
+          ],
+          "Next": "Bagit To DRI SIP Lambda Error -> Slack"
+        }
+      ]
+    },
+    "Bagit-dri-sip Output Handler": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Or": [
+            {
+              "Variable": "$.producer.event-name",
+              "StringEquals": "dri-preingest-sip-available"
+            },
+            {
+              "Variable": "$.producer.event-name",
+              "StringEquals": "dri-preingest-sip-error"
+            }
+          ],
+          "Next": "SNS Publish tre-internal"
+        }
+      ],
+      "Default": "Bagit To DRI SIP Unhandled Event -> Slack"
+    },
+    "SNS Publish tre-internal": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sns:publish",
+      "Parameters": {
+        "MessageAttributes": {
+          "environment": {
+            "DataType": "String",
+            "StringValue.$": "$.producer.environment"
+          },
+          "name": {
+            "DataType": "String",
+            "StringValue.$": "$.producer.name"
+          },
+          "process": {
+            "DataType": "String",
+            "StringValue.$": "$.producer.process"
+          },
+          "type": {
+            "DataType": "String",
+            "StringValue.$": "$.producer.type"
+          },
+          "event-name": {
+            "DataType": "String",
+            "StringValue.$": "$.producer.event-name"
+          }
+        },
+        "Message.$": "$",
+        "TopicArn": "${arn_sns_topic_dpsq_out}"
+      },
+      "Next": "Choice",
+      "ResultPath": null
+    },
+    "Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Or": [
+            {
+              "Variable": "$.producer.event-name",
+              "StringEquals": "dri-preingest-sip-error"
+            },
+            {
+              "Variable": "$.producer.event-name",
+              "StringEquals": "dri-preingest-sip-available"
+            }
+          ],
+          "Next": "Success"
+        }
+      ],
+      "Default": "Unhandled Event -> Slack"
+    },
+    "Success": {
+      "Type": "Succeed"
+    },
+    "Bagit To DRI SIP Unhandled Event -> Slack": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sns:publish",
+      "Parameters": {
+        "Message": {
+          "Execution.$": "$$.Execution.Name",
+          "StateMachine.$": "$$.StateMachine.Name",
+          "Status": "error",
+          "ErrorMessage.$": "$.producer.event-name",
+          "Event": "Invalid event name"
+        },
+        "TopicArn": "${arn_sns_topic_tre_slack_alerts}"
+      },
+      "Next": "Bagit To DRI SIP Unhandled Event"
+    },
+    "Bagit To DRI SIP Unhandled Event": {
+      "Type": "Fail"
+    },
+    "Bagit To DRI SIP Lambda Error -> Slack": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sns:publish",
+      "Parameters": {
+        "TopicArn": "${arn_sns_topic_tre_slack_alerts}",
+        "Message": {
+          "Execution.$": "$$.Execution.Name",
+          "StateMachine.$": "$$.StateMachine.Name",
+          "Status": "error",
+          "ErrorMessage.$": "$.Cause",
+          "Event": "Lambda Error (Bagit To DRI SIP)"
+        }
+      },
+      "Next": "BagIt To DRI SIP Failed"
+    },
+    "BagIt To DRI SIP Failed": {
+      "Type": "Fail"
+    },
+    "Unhandled Event -> Slack": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sns:publish",
+      "Parameters": {
+        "Message": {
+          "Execution.$": "$$.Execution.Name",
+          "StateMachine.$": "$$.StateMachine.Name",
+          "Status": "error",
+          "ErrorMessage.$": "$.producer.event-name",
+          "Event": "Invalid event name"
+        },
+        "TopicArn": "${arn_sns_topic_tre_slack_alerts}"
+      },
+      "Next": "Unhandled Event"
+    },
+    "Unhandled Event": {
+      "Type": "Fail"
+    }
+  }
+}
