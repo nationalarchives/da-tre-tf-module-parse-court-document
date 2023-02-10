@@ -19,17 +19,17 @@ variable "common_tre_slack_alerts_topic_arn" {
   type        = string
 }
 
-variable "dpsg_version" {
-  description = "DRI Preingest SIP Generation Step Function version (update if Step Function flow or called Lambda function versions change)"
+variable "parse_judgment_version" {
+  description = "Parse Judgment Step Function version (update if Step Function flow or called Lambda function versions change)"
   type        = string
 
 }
 
-variable "dpsg_image_versions" {
+variable "parse_judgment_image_versions" {
   description = "Latest version of Images for Lambda Functions"
   type = object({
-    tre_bagit_to_dri_sip = string
-    tre_sqs_sf_trigger   = string
+    tre_parse_judgment = string
+    tre_sqs_sf_trigger = string
   })
 }
 

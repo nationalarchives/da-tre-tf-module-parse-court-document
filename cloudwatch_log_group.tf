@@ -1,3 +1,3 @@
-resource "aws_cloudwatch_log_group" "dri_preingest_sip_generation" {
-  name = "${var.env}-${var.prefix}-dri-preingest-sip-generation-logs"
+resource "aws_cloudwatch_log_group" "parse_judgment" {
+  name = "${var.env}-${var.prefix}-parse-judgment-logs"
 }
