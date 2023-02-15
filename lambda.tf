@@ -1,41 +1,35 @@
-resource "aws_lambda_function" "bagit_to_dri_sip" {
-  image_uri     = "${var.ecr_uri_host}/${var.ecr_uri_repo_prefix}${var.prefix}-bagit-to-dri-sip:${var.dpsg_image_versions.tre_bagit_to_dri_sip}"
+resource "aws_lambda_function" "parse_judgment" {
+  image_uri     = "${var.ecr_uri_host}/lambda_functions/${var.prefix}-run-judgment-parser:${var.parse_judgment_image_versions.tre_parse_judgment}"
   package_type  = "Image"
-  function_name = local.lambda_name_bagit_to_dri_sip
-  role          = aws_iam_role.dri_preingest_sip_generation_lambda_role.arn
-  timeout       = 300
+  function_name = local.lambda_name_parse_judgment
+  role          = aws_iam_role.parse_judgment_lambda_role.arn
+  memory_size = 1536
+  timeout = 900
 
-  environment {
-    variables = {
-      "S3_DRI_OUT_BUCKET"        = aws_s3_bucket.dpsg_out.bucket
-      "TRE_ENVIRONMENT"          = var.env
-      "TRE_PRESIGNED_URL_EXPIRY" = 60
-      "TRE_PROCESS_NAME"         = local.step_function_name
-      "TRE_SYSTEM_NAME"          = upper(var.prefix)
-    }
+  tags = {
+    ApplicationType = ".NET"
   }
 }
 
-# dpsg_step_function_trigger
-resource "aws_lambda_function" "dpsg_trigger" {
-  image_uri     = "${var.ecr_uri_host}/${var.ecr_uri_repo_prefix}${var.prefix}-sqs-sf-trigger:${var.dpsg_image_versions.tre_sqs_sf_trigger}"
+# parse_judgment_step_function_trigger
+resource "aws_lambda_function" "parse_judgment_trigger" {
+  image_uri     = "${var.ecr_uri_host}/${var.ecr_uri_repo_prefix}${var.prefix}-sqs-sf-trigger:${var.parse_judgment_image_versions.tre_sqs_sf_trigger}"
   package_type  = "Image"
   function_name = local.lambda_name_trigger
-  role          = aws_iam_role.dpsg_trigger.arn
+  role          = aws_iam_role.parse_judgment_trigger.arn
   timeout       = 30
 
   environment {
     variables = {
-      "TRE_STATE_MACHINE_ARN"    = aws_sfn_state_machine.dri_preingest_sip_generation.arn
-      "TRE_CONSIGNMENT_KEY_PATH" = "parameters.bagit-validated.reference"
-      "TRE_RETRY_KEY_PATH"       = "parameters.bagit-validated.number-of-retries"
+      "TRE_STATE_MACHINE_ARN"    = aws_sfn_state_machine.parse_judgment.arn
+      "TRE_CONSIGNMENT_KEY_PATH" = "parameters.judgment.reference"
     }
   }
 }
 
-resource "aws_lambda_event_source_mapping" "dpsg_in_sqs" {
+resource "aws_lambda_event_source_mapping" "parse_judgment_in_sqs" {
   batch_size                         = 1
-  function_name                      = aws_lambda_function.dpsg_trigger.function_name
-  event_source_arn                   = aws_sqs_queue.tre_dpsg_in.arn
+  function_name                      = aws_lambda_function.parse_judgment_trigger.function_name
+  event_source_arn                   = aws_sqs_queue.tre_parse_judgment_in.arn
   maximum_batching_window_in_seconds = 0
 }

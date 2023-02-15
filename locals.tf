@@ -1,6 +1,6 @@
 locals {
   resource_prefix              = "${var.env}-${var.prefix}"
-  step_function_name           = "${local.resource_prefix}-dri-preingest-sip-generation"
-  lambda_name_bagit_to_dri_sip = "${local.resource_prefix}-bagit-to-dri-sip"
-  lambda_name_trigger          = "${local.resource_prefix}-dpsg-trigger"
+  step_function_name           = "${local.resource_prefix}-parse-judgment"
+  lambda_name_parse_judgment   = "${local.resource_prefix}-parse-judgment-lambda"
+  lambda_name_trigger          = "${local.resource_prefix}-parse-judgment-trigger"
 }

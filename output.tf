@@ -1,15 +1,15 @@
-output "dpsg_in_queue_arn" {
-  value       = aws_sqs_queue.tre_dpsg_in.arn
-  description = "ARN of the TRE-DPSG SQS Queue"
+output "parse_judgment_in_queue_arn" {
+  value       = aws_sqs_queue.tre_parse_judgment_in.arn
+  description = "ARN of the TRE-parse-judgment SQS Queue"
 }
 
-output "dri_preingest_sip_generation_lambda_role" {
-  value       = aws_iam_role.dri_preingest_sip_generation_lambda_role.arn
-  description = "ARN of the dpsg Lamda Role"
+output "parse_judgment_lambda_role" {
+  value       = aws_iam_role.parse_judgment_lambda_role.arn
+  description = "ARN of the parse judgment Lamda Role"
 }
 
-output "dri_preingest_sip_generation_role_arn" {
-  value       = aws_sfn_state_machine.dri_preingest_sip_generation.role_arn
-  description = "ARN of the DRI Preingest SIP Generation Step Function Role"
+output "parse_judgment_role_arn" {
+  value       = aws_sfn_state_machine.parse_judgment.role_arn
+  description = "ARN of the Parse Judgment Step Function Role"
 
 }

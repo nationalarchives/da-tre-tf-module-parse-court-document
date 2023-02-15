@@ -1,14 +1,14 @@
 {
   "Comment": "A description of my state machine",
-  "StartAt": "BagIt To DRI SIP",
+  "StartAt": "Parse Judgment",
   "States": {
-    "BagIt To DRI SIP": {
+    "Parse Judgment": {
       "Type": "Task",
       "Resource": "arn:aws:states:::lambda:invoke",
       "OutputPath": "$.Payload",
       "Parameters": {
         "Payload.$": "$",
-        "FunctionName": "${arn_lambda_dpsg_bagit_to_dri_sip}"
+        "FunctionName": "${arn_lambda_parse_judgment}"
       },
       "Retry": [
         {
@@ -22,34 +22,34 @@
           "BackoffRate": 2
         }
       ],
-      "Next": "Bagit-dri-sip Output Handler",
+      "Next": "Parse-judgment Output Handler",
       "Catch": [
         {
           "ErrorEquals": [
             "States.TaskFailed"
           ],
-          "Next": "Bagit To DRI SIP Lambda Error -> Slack"
+          "Next": "Parse Judgment Lambda Error -> Slack"
         }
       ]
     },
-    "Bagit-dri-sip Output Handler": {
+    "Parse-judgment Output Handler": {
       "Type": "Choice",
       "Choices": [
         {
           "Or": [
             {
               "Variable": "$.producer.event-name",
-              "StringEquals": "dri-preingest-sip-available"
+              "StringEquals": "parsed-judgment-available"
             },
             {
               "Variable": "$.producer.event-name",
-              "StringEquals": "dri-preingest-sip-error"
+              "StringEquals": "parse-judgment-error"
             }
           ],
           "Next": "SNS Publish tre-internal"
         }
       ],
-      "Default": "Bagit To DRI SIP Unhandled Event -> Slack"
+      "Default": "Parse Judgment Unhandled Event -> Slack"
     },
     "SNS Publish tre-internal": {
       "Type": "Task",
@@ -78,7 +78,7 @@
           }
         },
         "Message.$": "$",
-        "TopicArn": "${arn_sns_topic_dpsq_out}"
+        "TopicArn": "${arn_sns_topic_parse_judgment_out}"
       },
       "Next": "Choice",
       "ResultPath": null
@@ -90,11 +90,11 @@
           "Or": [
             {
               "Variable": "$.producer.event-name",
-              "StringEquals": "dri-preingest-sip-error"
+              "StringEquals": "parse-judgment-error"
             },
             {
               "Variable": "$.producer.event-name",
-              "StringEquals": "dri-preingest-sip-available"
+              "StringEquals": "parsed-judgment-available"
             }
           ],
           "Next": "Success"
@@ -105,7 +105,7 @@
     "Success": {
       "Type": "Succeed"
     },
-    "Bagit To DRI SIP Unhandled Event -> Slack": {
+    "Parse Judgment Unhandled Event -> Slack": {
       "Type": "Task",
       "Resource": "arn:aws:states:::sns:publish",
       "Parameters": {
@@ -118,12 +118,12 @@
         },
         "TopicArn": "${arn_sns_topic_tre_slack_alerts}"
       },
-      "Next": "Bagit To DRI SIP Unhandled Event"
+      "Next": "Parse Judgment Unhandled Event"
     },
-    "Bagit To DRI SIP Unhandled Event": {
+    "Parse Judgment Unhandled Event": {
       "Type": "Fail"
     },
-    "Bagit To DRI SIP Lambda Error -> Slack": {
+    "Parse Judgment Lambda Error -> Slack": {
       "Type": "Task",
       "Resource": "arn:aws:states:::sns:publish",
       "Parameters": {
@@ -133,12 +133,12 @@
           "StateMachine.$": "$$.StateMachine.Name",
           "Status": "error",
           "ErrorMessage.$": "$.Cause",
-          "Event": "Lambda Error (Bagit To DRI SIP)"
+          "Event": "Lambda Error (Parse Judgment)"
         }
       },
-      "Next": "BagIt To DRI SIP Failed"
+      "Next": "Parse Judgment Failed"
     },
-    "BagIt To DRI SIP Failed": {
+    "Parse Judgment Failed": {
       "Type": "Fail"
     },
     "Unhandled Event -> Slack": {
