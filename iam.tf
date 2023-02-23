@@ -126,3 +126,22 @@ data "aws_iam_policy_document" "tre_parse_judgment_in_queue" {
     ]
   }
 }
+
+# S3 Policy
+
+data "aws_iam_policy_document" "tre_common_data_bucket" {
+  statement {
+    actions = [
+      "s3:PutObject",
+      "s3:GetObject",
+      "s3:ListBucket",
+    ]
+
+    principals {
+      type        = "AWS"
+      identifiers = [aws_iam_role.parse_judgment_lambda_role.arn]
+    }
+
+    resources = ["${local.tre_data_bucket}/*", local.tre_data_bucket]
+  }
+}
