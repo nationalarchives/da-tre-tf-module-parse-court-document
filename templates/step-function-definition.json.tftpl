@@ -5,9 +5,24 @@
     "Parse Judgment": {
       "Type": "Task",
       "Resource": "arn:aws:states:::lambda:invoke",
-      "OutputPath": "$.Payload",
+      "ResultSelector": {
+        "xml.$": "$.Payload.parser-outputs.xml",
+        "metadata.$": "$.Payload.parser-outputs.metadata",
+        "images.$": "$.Payload.parser-outputs.images",
+        "log.$": "$.Payload.parser-outputs.log",
+        "error-messages.$": "$.Payload.parser-outputs.error-messages"
+      },
+      "ResultPath": "$.parser-outputs",
       "Parameters": {
-        "Payload.$": "$",
+        "Payload": {
+          "parser-inputs": {
+            "consignment-reference.$": "$.parser-inputs.consignment-reference",
+            "s3-bucket.$": "$.parser-inputs.s3-bucket",
+            "document-url.$": "$.parser-inputs.document-url",
+            "attachment-urls.$": "$.parser-inputs.attachment-urls",
+            "s3-output-prefix.$": "$.parser-inputs.s3-output-prefix"
+          }
+        },
         "FunctionName": "${arn_lambda_parse_judgment}"
       },
       "Retry": [
@@ -22,7 +37,7 @@
           "BackoffRate": 2
         }
       ],
-      "Next": "Parse-judgment Output Handler",
+      "Next": "Check for parser errors",
       "Catch": [
         {
           "ErrorEquals": [
@@ -32,24 +47,28 @@
         }
       ]
     },
-    "Parse-judgment Output Handler": {
+    "Check for parser errors": {
       "Type": "Choice",
       "Choices": [
         {
-          "Or": [
-            {
-              "Variable": "$.producer.event-name",
-              "StringEquals": "parsed-judgment-available"
-            },
-            {
-              "Variable": "$.producer.event-name",
-              "StringEquals": "parse-judgment-error"
-            }
-          ],
-          "Next": "SNS Publish tre-internal"
+          "Variable": "$.parser-outputs.error-messages[0]",
+          "IsPresent": true,
+          "Next": "Name as parser error"
         }
       ],
-      "Default": "Parse Judgment Unhandled Event -> Slack"
+      "Default": "Name as parser success"
+    },
+    "Name as parser success": {
+      "Type": "Pass",
+      "Next": "SNS Publish tre-internal",
+      "Result": "parsed-judgment",
+      "ResultPath": "$.event-name"
+    },
+    "Name as parser error": {
+      "Type": "Pass",
+      "Next": "SNS Publish tre-internal",
+      "Result": "parsed-judgment-error",
+      "ResultPath": "$.event-name"
     },
     "SNS Publish tre-internal": {
       "Type": "Task",
@@ -74,54 +93,57 @@
           },
           "event-name": {
             "DataType": "String",
-            "StringValue.$": "$.producer.event-name"
+            "StringValue.$": "$.event-name"
           }
         },
-        "Message.$": "$",
+        "Message": {
+          "properties": {
+            "messageType": "tna.tre.messages.judgment.parse.JudgmentParse",
+            "timestampMillis": 23345678,
+            "function": "tre-tf-module-parse-judgment",
+            "producer": "TRE",
+            "executionId": "executionId344",
+            "parentExecutionId": null
+          },
+          "parameters": {
+            "originator" : "FCL",
+            "s3FolderName.$": "$.parser-inputs.s3-output-prefix",
+            "s3Bucket.$": "$.parser-inputs.s3-bucket",
+            "reference.$": "$.parameters.judgment.reference"
+          }
+        },
         "TopicArn": "${arn_sns_topic_parse_judgment_out}"
       },
-      "Next": "Choice",
+      "Next": "Choose slack message",
       "ResultPath": null
     },
-    "Choice": {
+    "Choose slack message": {
       "Type": "Choice",
       "Choices": [
         {
-          "Or": [
-            {
-              "Variable": "$.producer.event-name",
-              "StringEquals": "parse-judgment-error"
-            },
-            {
-              "Variable": "$.producer.event-name",
-              "StringEquals": "parsed-judgment-available"
-            }
-          ],
-          "Next": "Success"
+          "Variable": "$.event-name",
+          "StringEquals": "parsed-judgment",
+          "Next": "Parser success -> Slack"
         }
       ],
-      "Default": "Unhandled Event -> Slack"
+      "Default": "Parser error -> Slack"
     },
-    "Success": {
-      "Type": "Succeed"
-    },
-    "Parse Judgment Unhandled Event -> Slack": {
+    "Parser success -> Slack": {
       "Type": "Task",
       "Resource": "arn:aws:states:::sns:publish",
       "Parameters": {
         "Message": {
           "Execution.$": "$$.Execution.Name",
           "StateMachine.$": "$$.StateMachine.Name",
-          "Status": "error",
-          "ErrorMessage.$": "$.producer.event-name",
-          "Event": "Invalid event name"
+          "Status": "success",
+          "Event.$": "$.event-name"
         },
         "TopicArn": "${arn_sns_topic_tre_slack_alerts}"
       },
-      "Next": "Parse Judgment Unhandled Event"
+      "Next": "Success"
     },
-    "Parse Judgment Unhandled Event": {
-      "Type": "Fail"
+    "Success": {
+      "Type": "Succeed"
     },
     "Parse Judgment Lambda Error -> Slack": {
       "Type": "Task",
@@ -141,7 +163,7 @@
     "Parse Judgment Failed": {
       "Type": "Fail"
     },
-    "Unhandled Event -> Slack": {
+    "Parser error -> Slack": {
       "Type": "Task",
       "Resource": "arn:aws:states:::sns:publish",
       "Parameters": {
@@ -150,14 +172,11 @@
           "StateMachine.$": "$$.StateMachine.Name",
           "Status": "error",
           "ErrorMessage.$": "$.producer.event-name",
-          "Event": "Invalid event name"
+          "Event.$": "$.event-name"
         },
         "TopicArn": "${arn_sns_topic_tre_slack_alerts}"
       },
-      "Next": "Unhandled Event"
-    },
-    "Unhandled Event": {
-      "Type": "Fail"
+      "Next": "Success"
     }
   }
 }
