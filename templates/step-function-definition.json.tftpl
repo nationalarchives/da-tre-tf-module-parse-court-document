@@ -98,7 +98,7 @@
         },
         "Message": {
           "properties": {
-            "messageType": "tna.tre.messages.parsed.judgment.TREParsedJudgment",
+            "messageType": "tna.tre.messages.judgment.parse.JudgmentParse",
             "timestampMillis": 23345678,
             "function": "tre-tf-module-parse-judgment",
             "producer": "TRE",
@@ -106,6 +106,7 @@
             "parentExecutionId": null
           },
           "parameters": {
+            "originator" : "FCL",
             "s3FolderName.$": "$.parser-inputs.s3-output-prefix",
             "s3Bucket.$": "$.parser-inputs.s3-bucket",
             "reference.$": "$.parameters.judgment.reference"
