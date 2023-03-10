@@ -1,0 +1,26 @@
+{
+  "parser-inputs": {
+    "consignment-reference": "TDR-2021-CF6L",
+    "s3-bucket": "dev-tre-common-data",
+    "document-url": "XXX_presigned_url_XXX",
+    "attachment-urls": [],
+    "s3-output-prefix": "MK-1/"
+  },
+  "UUIDs": [
+    {
+      "MK-TEST-UUID": "XXX_uuid_XXX"
+    }
+  ],
+  "producer": {
+    "environment": "dev",
+    "name": "TRE",
+    "process": "dev-tre-parse-judgment",
+    "event-name": "judgment-available",
+    "type": "judgment"
+  },
+  "parameters": {
+    "judgment": {
+      "reference": "TDR-2021-CF6L"
+    }
+  }
+}
