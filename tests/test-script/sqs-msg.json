@@ -1,26 +1,14 @@
 {
-  "parser-inputs": {
-    "consignment-reference": "TDR-2021-CF6L",
-    "s3-bucket": "dev-tre-common-data",
-    "document-url": "XXX_presigned_url_XXX",
-    "attachment-urls": [],
-    "s3-output-prefix": "MK-1/"
-  },
-  "UUIDs": [
-    {
-      "MK-TEST-UUID": "XXX_uuid_XXX"
-    }
-  ],
-  "producer": {
-    "environment": "dev",
-    "name": "TRE",
-    "process": "dev-tre-parse-judgment",
-    "event-name": "judgment-available",
-    "type": "judgment"
+  "properties" : {
+    "messageType" : "uk.gov.nationalarchives.tre.messages.judgment.parse.RequestJudgmentParse",
+    "timestampMillis" : 23345678,
+    "function" : "fcl-judgment-parse-request",
+    "producer" : "FCL",
+    "executionId" : "XXX_uuid_XXX",
+    "parentExecutionId" : null
   },
   "parameters": {
-    "judgment": {
-      "reference": "TDR-2021-CF6L"
-    }
+    "reference": "FCL-18",
+    "judgmentURI" : "XXX_presigned_url_XXX"
   }
 }
