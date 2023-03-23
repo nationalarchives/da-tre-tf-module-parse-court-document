@@ -36,9 +36,11 @@ main() {
   test_uuid="$(uuidgen | tr '[:upper:]' '[:lower:]')"
 
   message_string="$(jq -R -s '.' < sqs-msg.json )"
+#  message_string=$(cat sqs-msg.json)
   message_string_with_url="${message_string/XXX_presigned_url_XXX/$pre_signed_url}"
   message_string_with_url_and_uuid="${message_string_with_url/XXX_uuid_XXX/$test_uuid}"
   msg_to_publish="{\"Message\" : ${message_string_with_url_and_uuid}}"
+#  msg_to_publish="${message_string_with_url_and_uuid}"
   printf 'Publishing Message:\n%s\n' "${msg_to_publish:?}"
   aws --profile "${aws_profile_target:?}" sqs send-message \
     --queue-url "${sqs_url:?}" \

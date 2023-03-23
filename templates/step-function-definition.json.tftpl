@@ -16,11 +16,10 @@
       "Parameters": {
         "Payload": {
           "parser-inputs": {
-            "consignment-reference.$": "$.parser-inputs.consignment-reference",
-            "s3-bucket.$": "$.parser-inputs.s3-bucket",
-            "document-url.$": "$.parser-inputs.document-url",
-            "attachment-urls.$": "$.parser-inputs.attachment-urls",
-            "s3-output-prefix.$": "$.parser-inputs.s3-output-prefix"
+            "consignment-reference.$": "$.parameters.reference",
+            "s3-bucket": "${var.tre_data_bucket}",
+            "document-url.$": "$.parameters.judgmentURI",
+            "s3-output-prefix.$": "States.Format('consignments/judgment/FCL/{}/{}/', $.parameters.reference, $.properties.executionId)"
           }
         },
         "FunctionName": "${arn_lambda_parse_judgment}"
@@ -61,55 +60,33 @@
     "Name as parser success": {
       "Type": "Pass",
       "Next": "SNS Publish tre-internal",
-      "Result": "parsed-judgment",
-      "ResultPath": "$.event-name"
+      "Result": "uk.gov.nationalarchives.tre.messages.judgment.parse.JudgmentParse",
+      "ResultPath": "$.emit-message-type"
     },
     "Name as parser error": {
       "Type": "Pass",
       "Next": "SNS Publish tre-internal",
-      "Result": "parsed-judgment-error",
-      "ResultPath": "$.event-name"
+      "Result": "uk.gov.nationalarchives.tre.messages.judgment.parse.JudgmentParseError",
+      "ResultPath": "$.emit-message-type"
     },
     "SNS Publish tre-internal": {
       "Type": "Task",
       "Resource": "arn:aws:states:::sns:publish",
       "Parameters": {
-        "MessageAttributes": {
-          "environment": {
-            "DataType": "String",
-            "StringValue.$": "$.producer.environment"
-          },
-          "name": {
-            "DataType": "String",
-            "StringValue.$": "$.producer.name"
-          },
-          "process": {
-            "DataType": "String",
-            "StringValue.$": "$.producer.process"
-          },
-          "type": {
-            "DataType": "String",
-            "StringValue.$": "$.producer.type"
-          },
-          "event-name": {
-            "DataType": "String",
-            "StringValue.$": "$.event-name"
-          }
-        },
         "Message": {
           "properties": {
-            "messageType": "tna.tre.messages.judgment.parse.JudgmentParse",
-            "timestampMillis": 23345678,
+            "messageType.$": "$.emit-message-type",
+            "timestampMillis.$": "$$.State.EnteredTime",
             "function": "tre-tf-module-parse-judgment",
             "producer": "TRE",
-            "executionId": "executionId344",
-            "parentExecutionId": null
+            "executionId.$": "$.properties.executionId",
+            "parentExecutionId.$": "$.properties.parentExecutionId"
           },
           "parameters": {
-            "originator" : "FCL",
-            "s3FolderName.$": "$.parser-inputs.s3-output-prefix",
-            "s3Bucket.$": "$.parser-inputs.s3-bucket",
-            "reference.$": "$.parameters.judgment.reference"
+            "originator": "FCL",
+            "s3FolderName.$": "States.Format('consignments/judgment/FCL/{}/{}/', $.parameters.reference, $.properties.executionId)",
+            "s3Bucket": "${var.tre_data_bucket}",
+            "reference.$": "$.parameters.reference"
           }
         },
         "TopicArn": "${arn_sns_topic_parse_judgment_out}"
@@ -121,8 +98,8 @@
       "Type": "Choice",
       "Choices": [
         {
-          "Variable": "$.event-name",
-          "StringEquals": "parsed-judgment",
+          "Variable": "$.emit-message-type",
+          "StringEquals": "uk.gov.nationalarchives.tre.messages.judgment.parse.JudgmentParse",
           "Next": "Parser success -> Slack"
         }
       ],
@@ -136,7 +113,7 @@
           "Execution.$": "$$.Execution.Name",
           "StateMachine.$": "$$.StateMachine.Name",
           "Status": "success",
-          "Event.$": "$.event-name"
+          "Event": "Parse Judgment"
         },
         "TopicArn": "${arn_sns_topic_tre_slack_alerts}"
       },
@@ -171,8 +148,8 @@
           "Execution.$": "$$.Execution.Name",
           "StateMachine.$": "$$.StateMachine.Name",
           "Status": "error",
-          "ErrorMessage.$": "$.producer.event-name",
-          "Event.$": "$.event-name"
+          "ErrorMessage.$": "$.parser-outputs.error-messages",
+          "Event": "Parse Judgment Error"
         },
         "TopicArn": "${arn_sns_topic_tre_slack_alerts}"
       },

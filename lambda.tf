@@ -22,7 +22,7 @@ resource "aws_lambda_function" "parse_judgment_trigger" {
   environment {
     variables = {
       "TRE_STATE_MACHINE_ARN"    = aws_sfn_state_machine.parse_judgment.arn
-      "TRE_CONSIGNMENT_KEY_PATH" = "parameters.judgment.reference"
+      "TRE_CONSIGNMENT_KEY_PATH" = "parameters.reference"
     }
   }
 }
