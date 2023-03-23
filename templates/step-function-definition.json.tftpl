@@ -17,7 +17,7 @@
         "Payload": {
           "parser-inputs": {
             "consignment-reference.$": "$.parameters.reference",
-            "s3-bucket": "${var.tre_data_bucket}",
+            "s3-bucket": "${tre_data_bucket}",
             "document-url.$": "$.parameters.judgmentURI",
             "s3-output-prefix.$": "States.Format('consignments/judgment/FCL/{}/{}/', $.parameters.reference, $.properties.executionId)"
           }
@@ -85,7 +85,7 @@
           "parameters": {
             "originator": "FCL",
             "s3FolderName.$": "States.Format('consignments/judgment/FCL/{}/{}/', $.parameters.reference, $.properties.executionId)",
-            "s3Bucket": "${var.tre_data_bucket}",
+            "s3Bucket": "${tre_data_bucket}",
             "reference.$": "$.parameters.reference"
           }
         },
