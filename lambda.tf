@@ -3,8 +3,8 @@ resource "aws_lambda_function" "parse_judgment" {
   package_type  = "Image"
   function_name = local.lambda_name_parse_judgment
   role          = aws_iam_role.parse_judgment_lambda_role.arn
-  memory_size = 1536
-  timeout = 900
+  memory_size   = 1536
+  timeout       = 900
 
   tags = {
     ApplicationType = ".NET"

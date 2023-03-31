@@ -1,6 +1,6 @@
 resource "aws_iam_role" "parse_judgment" {
-  name               = "${var.env}-${var.prefix}-parse-judgment-role"
-  assume_role_policy = data.aws_iam_policy_document.parse_judgment_assume_role_policy.json
+  name                 = "${var.env}-${var.prefix}-parse-judgment-role"
+  assume_role_policy   = data.aws_iam_policy_document.parse_judgment_assume_role_policy.json
   permissions_boundary = var.tre_permission_boundary_arn
   inline_policy {
     name   = "parse-judgment-policies"
@@ -62,8 +62,8 @@ data "aws_iam_policy_document" "parse_judgment_machine_policy" {
 
 # Role for the lambda functions in parse_judgment step-function
 resource "aws_iam_role" "parse_judgment_lambda_role" {
-  name               = "${var.env}-${var.prefix}-parse-judgment-lambda-role"
-  assume_role_policy = data.aws_iam_policy_document.lambda_assume_role_policy.json
+  name                 = "${var.env}-${var.prefix}-parse-judgment-lambda-role"
+  assume_role_policy   = data.aws_iam_policy_document.lambda_assume_role_policy.json
   permissions_boundary = var.tre_permission_boundary_arn
 }
 
@@ -74,8 +74,8 @@ resource "aws_iam_role_policy_attachment" "parse_judgment_lambda_logs" {
 
 # Role for the parse-judgment step-function trigger
 resource "aws_iam_role" "parse_judgment_trigger" {
-  name               = "${var.env}-${var.prefix}-parse-judgment-trigger-lambda-role"
-  assume_role_policy = data.aws_iam_policy_document.lambda_assume_role_policy.json
+  name                 = "${var.env}-${var.prefix}-parse-judgment-trigger-lambda-role"
+  assume_role_policy   = data.aws_iam_policy_document.lambda_assume_role_policy.json
   permissions_boundary = var.tre_permission_boundary_arn
   inline_policy {
     name   = "${var.env}-${var.prefix}-parse-judgment-trigger"
