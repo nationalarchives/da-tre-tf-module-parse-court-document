@@ -1,14 +1,15 @@
 {
   "properties" : {
     "messageType" : "uk.gov.nationalarchives.tre.messages.judgment.parse.RequestJudgmentParse",
-    "timestampMillis" : 23345678,
+    "timestampMillis" : "2023-03-29T11:00:12.280Z",
     "function" : "fcl-judgment-parse-request",
     "producer" : "FCL",
     "executionId" : "XXX_uuid_XXX",
     "parentExecutionId" : null
   },
   "parameters": {
-    "reference": "FCL-18",
-    "judgmentURI" : "XXX_presigned_url_XXX"
+    "reference": "FCL-MK-23",
+    "judgmentURI": "XXX_docx_url_XXX",
+    "originator" : "FCL"
   }
 }
