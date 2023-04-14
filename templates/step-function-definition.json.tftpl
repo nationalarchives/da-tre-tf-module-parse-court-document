@@ -52,22 +52,33 @@
         {
           "Variable": "$.parser-outputs.error-messages[0]",
           "IsPresent": true,
-          "Next": "Name as parser error"
+          "Next": "Prepare parser error parameters"
+        },
+        {
+          "Not": {
+            "Variable": "$.parser-outputs.error-messages",
+            "IsPresent": true
+          },
+          "Next": "Unexpected Parser Output -> Slack"
         }
       ],
-      "Default": "Name as parser success"
+      "Default": "Prepare parser success parameters"
     },
-    "Name as parser success": {
+    "Prepare parser success parameters": {
       "Type": "Pass",
       "Next": "SNS Publish tre-internal",
-      "Result": "uk.gov.nationalarchives.tre.messages.judgment.parse.JudgmentParse",
-      "ResultPath": "$.emit-message-type"
+      "Parameters": {
+        "status": "JUDGMENT_PARSE_NO_ERRORS"
+      },
+      "ResultPath": "$.emit-message-parameters"
     },
-    "Name as parser error": {
+    "Prepare parser error parameters": {
       "Type": "Pass",
       "Next": "SNS Publish tre-internal",
-      "Result": "uk.gov.nationalarchives.tre.messages.judgment.parse.JudgmentParseError",
-      "ResultPath": "$.emit-message-type"
+      "Parameters": {
+        "status": "JUDGMENT_PARSE_WITH_ERRORS"
+      },
+      "ResultPath": "$.emit-message-parameters"
     },
     "SNS Publish tre-internal": {
       "Type": "Task",
@@ -75,15 +86,16 @@
       "Parameters": {
         "Message": {
           "properties": {
-            "messageType.$": "$.emit-message-type",
-            "timestampMillis.$": "$$.State.EnteredTime",
+            "messageType": "uk.gov.nationalarchives.tre.messages.judgment.parse.JudgmentParse",
+            "timestamp.$": "$$.State.EnteredTime",
             "function": "tre-tf-module-parse-judgment",
             "producer": "TRE",
             "executionId.$": "$.properties.executionId",
             "parentExecutionId.$": "$.properties.parentExecutionId"
           },
           "parameters": {
-            "originator": "FCL",
+            "status.$": "$.emit-message-parameters.status",
+            "originator.$": "$.parameters.originator",
             "s3FolderName.$": "States.Format('consignments/judgment/FCL/{}/{}/', $.parameters.reference, $.properties.executionId)",
             "s3Bucket": "${tre_data_bucket}",
             "reference.$": "$.parameters.reference"
@@ -98,8 +110,8 @@
       "Type": "Choice",
       "Choices": [
         {
-          "Variable": "$.emit-message-type",
-          "StringEquals": "uk.gov.nationalarchives.tre.messages.judgment.parse.JudgmentParse",
+          "Variable": "$.emit-message-parameters.status",
+          "StringEquals": "JUDGMENT_PARSE_NO_ERRORS",
           "Next": "Parser success -> Slack"
         }
       ],
@@ -121,6 +133,21 @@
     },
     "Success": {
       "Type": "Succeed"
+    },
+    "Unexpected Parser Output -> Slack": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sns:publish",
+      "Parameters": {
+        "TopicArn": "{arn_sns_topic_tre_slack_alerts}",
+        "Message": {
+          "Execution.$": "$$.Execution.Name",
+          "StateMachine.$": "$$.StateMachine.Name",
+          "Status": "error",
+          "ErrorMessage": null,
+          "Event": "Unexpected Output (Parse Judgment)"
+        }
+      },
+      "Next": "Parse Judgment Failed"
     },
     "Parse Judgment Lambda Error -> Slack": {
       "Type": "Task",

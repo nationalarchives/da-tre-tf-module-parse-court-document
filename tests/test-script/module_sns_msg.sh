@@ -3,15 +3,16 @@ set -e
 
 main() {
   if [ $# -lt 2 ] || [ $# -gt 5 ]; then
-    echo "Usage: sns_arn aws_profile_target [aws_profile_source] [s3_bucket_source] [ps3_object_docx]"
+    echo "Usage: sns_arn aws_profile_target [aws_profile_source] [ps3_object_docx] [s3_bucket_source]"
     return 1
   fi
 
   local sns_arn="${1:?}"
   local aws_profile_target="${2:?}"
-  local aws_profile_source="${3:-""}"
-  local s3_bucket_source="${4:-""}"
-  local s3_object_docx="${5:-""}"
+  local s3_object_docx="${3:-""}"
+  local aws_profile_source="${4:-""}"
+  local s3_bucket_source="${5:-""}"
+
 
   printf 'sns_arn="%s"\n' "${sns_arn}"
   printf 'aws_profile_target="%s"\n' "${aws_profile_target}"
@@ -22,7 +23,9 @@ main() {
   if [ "$s3_bucket_source" = "" ]
   then
           printf "Using Default docx"
-          docx_url="https://tna-caselaw-assets.s3.eu-west-2.amazonaws.com/eat/2022/1/eat_2022_1.docx"
+          docx_url=${s3_object_docx}
+# test doc not found with this change
+#          docx_url="https://tre-testing"
   else
           local s3_path_docx="s3://${s3_bucket_source}/${s3_object_docx}"
           printf 'AWS S3 listing for source docx "%s":\n' "${s3_path_docx:?}"
@@ -32,7 +35,8 @@ main() {
               --expires-in "${presigned_url_expiry_secs:-60}")"
   fi
   printf 'docx_url="%s"\n' "${docx_url}"
-
+# test presigned url has timedout with a sleep here
+#  sleep 2m
   local test_uuid
   test_uuid="$(uuidgen | tr '[:upper:]' '[:lower:]')"
 
