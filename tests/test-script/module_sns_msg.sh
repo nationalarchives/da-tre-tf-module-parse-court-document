@@ -23,6 +23,7 @@ main() {
   then
           printf "Using Default docx"
           docx_url="https://tna-caselaw-assets.s3.eu-west-2.amazonaws.com/eat/2022/1/eat_2022_1.docx"
+#          docx_url="https://tre-testing"
   else
           local s3_path_docx="s3://${s3_bucket_source}/${s3_object_docx}"
           printf 'AWS S3 listing for source docx "%s":\n' "${s3_path_docx:?}"
@@ -32,7 +33,7 @@ main() {
               --expires-in "${presigned_url_expiry_secs:-60}")"
   fi
   printf 'docx_url="%s"\n' "${docx_url}"
-
+#  sleep 2m
   local test_uuid
   test_uuid="$(uuidgen | tr '[:upper:]' '[:lower:]')"
 
