@@ -68,7 +68,7 @@
       "Type": "Pass",
       "Next": "SNS Publish tre-internal",
       "Parameters": {
-        "status": "JudgmentParseNoErrors"
+        "status": "JUDGMENT_PARSE_NO_ERRORS"
       },
       "ResultPath": "$.emit-message-parameters"
     },
@@ -76,7 +76,7 @@
       "Type": "Pass",
       "Next": "SNS Publish tre-internal",
       "Parameters": {
-        "status": "JudgmentParseWithErrors"
+        "status": "JUDGMENT_PARSE_WITH_ERRORS"
       },
       "ResultPath": "$.emit-message-parameters"
     },
@@ -111,7 +111,7 @@
       "Choices": [
         {
           "Variable": "$.emit-message-parameters.status",
-          "StringEquals": "JudgmentParseNoErrors",
+          "StringEquals": "JUDGMENT_PARSE_NO_ERRORS",
           "Next": "Parser success -> Slack"
         }
       ],
