@@ -3,7 +3,7 @@ set -e
 
 main() {
   if [ $# -lt 2 ] || [ $# -gt 5 ]; then
-    echo "Usage: sns_arn aws_profile_target [aws_profile_source] [ps3_object_docx] [s3_bucket_source]"
+    echo "Usage: sns_arn aws_profile_target s3_object_docx [aws_profile_source] [s3_bucket_source]"
     return 1
   fi
 
