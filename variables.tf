@@ -62,3 +62,8 @@ variable "tre_data_bucket" {
   description = "TRE Data Bucket Name"
   type        = string
 }
+
+variable "parser_s3_bucket_input" {
+  description = "The s3 input bucket "
+  type        = list(string)
+}
