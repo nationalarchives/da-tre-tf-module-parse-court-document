@@ -19,7 +19,7 @@
             "consignment-reference.$": "$.parameters.reference",
             "s3-bucket": "${tre_data_bucket}",
             "s3-input-bucket.$" : "$.parameters.s3Bucket",
-            "s3-input-key.$": : "$.parameters.s3Key",
+            "s3-input-key.$": "$.parameters.s3Key",
             "document-type.$": "$.parameters.parserInstructions.documentType",
             "s3-output-prefix.$": "States.Format('consignments/judgment/FCL/{}/{}/', $.parameters.reference, $.properties.executionId)"
           }
