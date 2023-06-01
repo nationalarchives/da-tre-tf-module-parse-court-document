@@ -24,7 +24,7 @@
             "s3-output-prefix.$": "States.Format('consignments/judgment/FCL/{}/{}/', $.parameters.reference, $.properties.executionId)"
           }
         },
-        "FunctionName": "${arn_lambda_parse_judgment}"
+        "FunctionName": "${arn_lambda_parse_court_document}"
       },
       "Retry": [
         {
@@ -103,7 +103,7 @@
             "reference.$": "$.parameters.reference"
           }
         },
-        "TopicArn": "${arn_sns_topic_parse_judgment_out}"
+        "TopicArn": "${arn_sns_topic_parse_court_document_out}"
       },
       "Next": "Choose slack message",
       "ResultPath": null

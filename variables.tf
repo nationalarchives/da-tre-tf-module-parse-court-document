@@ -19,16 +19,16 @@ variable "common_tre_slack_alerts_topic_arn" {
   type        = string
 }
 
-variable "parse_judgment_version" {
+variable "parse_court_document_version" {
   description = "Parse Judgment Step Function version (update if Step Function flow or called Lambda function versions change)"
   type        = string
 
 }
 
-variable "parse_judgment_image_versions" {
+variable "parse_court_document_image_versions" {
   description = "Latest version of Images for Lambda Functions"
   type = object({
-    tre_parse_judgment = string
+    tre_parse_court_document = string
     tre_sqs_sf_trigger = string
   })
 }
