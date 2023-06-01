@@ -141,7 +141,7 @@ resource  "aws_iam_policy" "parser_lambda_s3_policy" {
 
 data "aws_iam_policy_document" "read_s3-bucket-input" {
   statement {
-    effect =  "Allow",
+    effect =  "Allow"
     actions   = ["s3:GetObject"]
     resources = var.parser_s3_bucket_input
   }
