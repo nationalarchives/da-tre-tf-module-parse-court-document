@@ -19,13 +19,13 @@ variable "common_tre_slack_alerts_topic_arn" {
   type        = string
 }
 
-variable "parse_court_document_version" {
+variable "court_document_parse_version" {
   description = "Parse Judgment Step Function version (update if Step Function flow or called Lambda function versions change)"
   type        = string
 
 }
 
-variable "parse_court_document_image_versions" {
+variable "court_document_parser_image_versions" {
   description = "Latest version of Images for Lambda Functions"
   type = object({
     tre_parse_court_document = string
@@ -63,7 +63,7 @@ variable "tre_data_bucket" {
   type        = string
 }
 
-variable "parser_s3_bucket_input" {
+variable "parse_s3_bucket_input" {
   description = "The s3 input bucket "
   type        = list(string)
 }
