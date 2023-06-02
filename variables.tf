@@ -28,7 +28,7 @@ variable "court_document_parse_version" {
 variable "court_document_parse_image_versions" {
   description = "Latest version of Images for Lambda Functions"
   type = object({
-    tre_parse_court_document = string
+    tre_court_document_parse = string
     tre_sqs_sf_trigger = string
   })
 }
