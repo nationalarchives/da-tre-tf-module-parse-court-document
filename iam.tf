@@ -130,7 +130,7 @@ data "aws_iam_policy_document" "tre_court_document_parse_in_queue" {
 resource "aws_iam_policy_attachment" "parser_lambda_s3_policy_attachment" {
   name        = "parser-lambda-s3-policy-attachment"
   policy_arn = aws_iam_policy.parser_lambda_s3_policy.arn
-  roles      = aws_iam_role.court_document_parse_lambda_role.arn
+  roles      = [ aws_iam_role.court_document_parse_lambda_role.arn ]
 }
 
 resource  "aws_iam_policy" "parser_lambda_s3_policy" {
