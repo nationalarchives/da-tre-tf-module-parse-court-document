@@ -74,11 +74,11 @@ resource "aws_iam_role_policy_attachment" "court_document_parse_lambda_logs" {
 
 # Role for the parse-judgment step-function trigger
 resource "aws_iam_role" "court_document_parse_trigger" {
-  name                 = "${var.env}-${var.prefix}-parse-judgment-trigger-lambda-role"
+  name                 = "${var.env}-${var.prefix}-court-document-parse-trigger-lambda-role"
   assume_role_policy   = data.aws_iam_policy_document.lambda_assume_role_policy.json
   permissions_boundary = var.tre_permission_boundary_arn
   inline_policy {
-    name   = "${var.env}-${var.prefix}-parse-judgment-trigger"
+    name   = "${var.env}-${var.prefix}-court-document-parse-trigger"
     policy = data.aws_iam_policy_document.court_document_parse_trigger.json
   }
 }
@@ -143,6 +143,6 @@ data "aws_iam_policy_document" "read_s3-bucket-input" {
   statement {
     effect =  "Allow"
     actions   = ["s3:GetObject"]
-    resources = var.parser_s3_bucket_input
+    resources = var.parse_s3_bucket_input
   }
 }
