@@ -60,7 +60,7 @@ data "aws_iam_policy_document" "court_document_parse_machine_policy" {
   statement {
     effect =  "Allow"
     actions   = ["s3:GetObject"]
-    resources = var.parse_s3_bucket_input
+    resources = var.parse_s3_bucket_input.arn
   }
 }
 
