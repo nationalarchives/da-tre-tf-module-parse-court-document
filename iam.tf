@@ -68,8 +68,15 @@ resource "aws_iam_role" "court_document_parse_lambda_role" {
 }
 
 resource "aws_iam_role_policy_attachment" "court_document_parse_lambda_logs" {
+  name       = "court_document_parse_lambda_logs_attach_name"
   role       = aws_iam_role.court_document_parse_lambda_role.name
   policy_arn = "arn:aws:iam::aws:policy/AWSOpsWorksCloudWatchLogs"
+}
+
+resource "aws_iam_policy_attachment" "court_document_lambda_s3_input" {
+  name      = "court_document_lambda_s3_input_attach_name"
+  role      = aws_iam_role.court_document_parse_lambda_role.name
+  policy_arn = aws_iam_policy.parser_lambda_s3_policy.arn
 }
 
 # Role for the parse-judgment step-function trigger
@@ -127,10 +134,7 @@ data "aws_iam_policy_document" "tre_court_document_parse_in_queue" {
   }
 }
 
-resource "aws_iam_policy_attachment" "court_document_lambda_policy_attachment" {
-  role      = aws_iam_role.court_document_parse_lambda_role.name
-  policy_arn = aws_iam_policy.parser_lambda_s3_policy.arn
-}
+
 
 resource  "aws_iam_policy" "parser_lambda_s3_policy" {
   name        = "parser-lambda-s3-bucket-input-read"
