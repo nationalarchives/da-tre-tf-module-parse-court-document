@@ -56,12 +56,6 @@ data "aws_iam_policy_document" "court_document_parse_machine_policy" {
       aws_lambda_function.court_document_parse.arn
     ]
   }
-
-  statement {
-    effect =  "Allow"
-    actions   = ["s3:GetObject"]
-    resources = var.parse_s3_bucket_input.arn
-  }
 }
 
 # Lambda Roles
@@ -131,4 +125,24 @@ data "aws_iam_policy_document" "tre_court_document_parse_in_queue" {
       aws_sqs_queue.tre_court_document_parse_in.arn
     ]
   }
+}
+
+
+
+resource  "aws_iam_policy" "parser_lambda_s3_policy" {
+  name        = "parser-lambda-s3-bucket-input-read"
+  description = "Policy allowing parser lambda s3-bucket-input read"
+  policy      =  data.aws_iam_policy_document.read_s3-bucket-input.json
+}
+
+data "aws_iam_policy_document" "read_s3-bucket-input" {
+  statement {
+    effect =  "Allow"
+    actions   = ["s3:GetObject"]
+    resources = var.parse_s3_bucket_input
+  }
+}
+resource "aws_iam_role_policy_attachment" "court_document_lambda_s3_input" {
+  role      = aws_iam_role.court_document_parse_lambda_role.name
+  policy_arn = aws_iam_policy.parser_lambda_s3_policy.arn
 }
