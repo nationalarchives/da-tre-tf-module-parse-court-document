@@ -133,7 +133,7 @@ resource "aws_iam_policy_attachment" "court_document_lambda_policy_attachment" {
 }
 
 resource  "aws_iam_policy" "parser_lambda_s3_policy" {
-  name        = "parser lambda s3-bucket-input read"
+  name        = "parser-lambda-s3-bucket-input read"
   description = "Policy allowing parser lambda s3-bucket-input read"
   policy      =  data.aws_iam_policy_document.read_s3-bucket-input.json
 }
