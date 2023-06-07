@@ -1,8 +1,8 @@
 {
   "Comment": "A description of my state machine",
-  "StartAt": "Parse Judgment",
+  "StartAt": "Parse Court Document",
   "States": {
-    "Parse Judgment": {
+    "Parse Court Document": {
       "Type": "Task",
       "Resource": "arn:aws:states:::lambda:invoke",
       "ResultSelector": {
@@ -42,7 +42,8 @@
           "ErrorEquals": [
             "States.TaskFailed"
           ],
-          "Next": "Parse Judgment Lambda Error -> Slack"
+          "Next": "Error -> tre-internal",
+          "ResultPath": "$.lambda-output.payload.parameters.errors"
         }
       ]
     },
@@ -59,7 +60,7 @@
             "Variable": "$.parser-outputs.error-messages",
             "IsPresent": true
           },
-          "Next": "Unexpected Parser Output -> Slack"
+          "Next": "Unhandled Error Prep"
         }
       ],
       "Default": "Prepare parser success parameters"
@@ -79,6 +80,23 @@
         "status": "JUDGMENT_PARSE_WITH_ERRORS"
       },
       "ResultPath": "$.emit-message-parameters"
+    },
+    "Unhandled Error Prep": {
+      "Type": "Pass",
+      "Parameters": {
+        "lambda-output": {
+          "payload": {
+            "parameters": {
+              "errors.$": "$.parser-outputs"
+            }
+          }
+        },
+        "parameters.$": "$.parameters",
+        "properties.$": "$.properties"
+      },
+      "ResultPath": "$.temp",
+      "OutputPath": "$.temp",
+      "Next": "Error -> tre-internal"
     },
     "SNS Publish tre-internal": {
       "Type": "Task",
@@ -106,6 +124,31 @@
       "Next": "Choose slack message",
       "ResultPath": null
     },
+    "Error -> tre-internal": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sns:publish",
+      "Parameters": {
+        "Message": {
+          "properties": {
+            "messageType": "uk.gov.nationalarchives.tre.messages.Error",
+            "timestamp.$": "$$.State.EnteredTime",
+            "function": "tre-tf-module-judgment-parser",
+            "producer": "TRE",
+            "executionId.$": "$.properties.executionId",
+            "parentExecutionId.$": "$.properties.parentExecutionId"
+          },
+          "parameters": {
+            "status": "TRE_ERROR",
+            "originator.$": "$.parameters.originator",
+            "reference.$": "$.parameters.reference",
+            "errors.$": "$.lambda-output.payload.parameters.errors"
+          }
+        },
+        "TopicArn": "${arn_sns_topic_parse_judgment_out}"
+      },
+      "Next": "TRE Error -> Slack",
+      "ResultPath": null
+    },
     "Choose slack message": {
       "Type": "Choice",
       "Choices": [
@@ -125,7 +168,7 @@
           "Execution.$": "$$.Execution.Name",
           "StateMachine.$": "$$.StateMachine.Name",
           "Status": "success",
-          "Event": "Parse Judgment"
+          "Event": "Parse Court Document"
         },
         "TopicArn": "${arn_sns_topic_tre_slack_alerts}"
       },
@@ -134,22 +177,7 @@
     "Success": {
       "Type": "Succeed"
     },
-    "Unexpected Parser Output -> Slack": {
-      "Type": "Task",
-      "Resource": "arn:aws:states:::sns:publish",
-      "Parameters": {
-        "TopicArn": "{arn_sns_topic_tre_slack_alerts}",
-        "Message": {
-          "Execution.$": "$$.Execution.Name",
-          "StateMachine.$": "$$.StateMachine.Name",
-          "Status": "error",
-          "ErrorMessage": null,
-          "Event": "Unexpected Output (Parse Judgment)"
-        }
-      },
-      "Next": "Parse Judgment Failed"
-    },
-    "Parse Judgment Lambda Error -> Slack": {
+    "TRE Error -> Slack": {
       "Type": "Task",
       "Resource": "arn:aws:states:::sns:publish",
       "Parameters": {
@@ -158,13 +186,13 @@
           "Execution.$": "$$.Execution.Name",
           "StateMachine.$": "$$.StateMachine.Name",
           "Status": "error",
-          "ErrorMessage.$": "$.Cause",
-          "Event": "Lambda Error (Parse Judgment)"
+          "ErrorMessage.$": "$.lambda-output.payload.parameters.errors",
+          "Event": "TRE Error (Parse Court Document)"
         }
       },
-      "Next": "Parse Judgment Failed"
+      "Next": "Failed"
     },
-    "Parse Judgment Failed": {
+    "Failed": {
       "Type": "Fail"
     },
     "Parser error -> Slack": {
@@ -176,7 +204,7 @@
           "StateMachine.$": "$$.StateMachine.Name",
           "Status": "error",
           "ErrorMessage.$": "$.parser-outputs.error-messages",
-          "Event": "Parse Judgment Error"
+          "Event": "Parse Court Document Error"
         },
         "TopicArn": "${arn_sns_topic_tre_slack_alerts}"
       },
