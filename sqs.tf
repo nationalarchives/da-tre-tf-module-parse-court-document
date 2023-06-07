@@ -7,7 +7,7 @@ resource "aws_sqs_queue" "tre_court_document_parse_in" {
   sqs_managed_sse_enabled = true
 }
 
-resource "aws_sqs_queue_policy" "court-document-tre-parse-in" {
+resource "aws_sqs_queue_policy" "tre_court_document_parse_in" {
   queue_url = aws_sqs_queue.tre_court_document_parse_in.id
   policy    = data.aws_iam_policy_document.tre_court_document_parse_in_queue.json
 }
