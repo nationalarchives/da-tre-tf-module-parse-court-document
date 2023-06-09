@@ -18,11 +18,13 @@
           "parser-inputs": {
             "consignment-reference.$": "$.parameters.reference",
             "s3-bucket": "${tre_data_bucket}",
-            "document-url.$": "$.parameters.judgmentURI",
+            "s3-input-bucket.$" : "$.parameters.s3Bucket",
+            "s3-input-key.$": "$.parameters.s3Key",
+            "document-type.$": "$.parameters.parserInstructions.documentType",
             "s3-output-prefix.$": "States.Format('consignments/judgment/FCL/{}/{}/', $.parameters.reference, $.properties.executionId)"
           }
         },
-        "FunctionName": "${arn_lambda_parse_judgment}"
+        "FunctionName": "${arn_lambda_court_document_parse}"
       },
       "Retry": [
         {
@@ -104,7 +106,7 @@
       "Parameters": {
         "Message": {
           "properties": {
-            "messageType": "uk.gov.nationalarchives.tre.messages.judgment.parse.JudgmentParse",
+            "messageType": "uk.gov.nationalarchives.tre.messages.courtdocument.parse.CourtDocumentParse",
             "timestamp.$": "$$.State.EnteredTime",
             "function": "tre-tf-module-parse-judgment",
             "producer": "TRE",
@@ -119,7 +121,7 @@
             "reference.$": "$.parameters.reference"
           }
         },
-        "TopicArn": "${arn_sns_topic_parse_judgment_out}"
+        "TopicArn": "${arn_sns_topic_court_document_parse_out}"
       },
       "Next": "Choose slack message",
       "ResultPath": null
@@ -144,7 +146,7 @@
             "errors.$": "$.lambda-output.payload.parameters.errors"
           }
         },
-        "TopicArn": "${arn_sns_topic_parse_judgment_out}"
+        "TopicArn": "${arn_sns_topic_court_document_parse_out}"
       },
       "Next": "TRE Error -> Slack",
       "ResultPath": null

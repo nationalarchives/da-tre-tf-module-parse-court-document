@@ -1,14 +1,14 @@
-resource "aws_iam_role" "parse_judgment" {
+resource "aws_iam_role" "court_document_parse" {
   name                 = "${var.env}-${var.prefix}-parse-judgment-role"
-  assume_role_policy   = data.aws_iam_policy_document.parse_judgment_assume_role_policy.json
+  assume_role_policy   = data.aws_iam_policy_document.court_document_parse_assume_role_policy.json
   permissions_boundary = var.tre_permission_boundary_arn
   inline_policy {
     name   = "parse-judgment-policies"
-    policy = data.aws_iam_policy_document.parse_judgment_machine_policy.json
+    policy = data.aws_iam_policy_document.court_document_parse_machine_policy.json
   }
 }
 
-data "aws_iam_policy_document" "parse_judgment_assume_role_policy" {
+data "aws_iam_policy_document" "court_document_parse_assume_role_policy" {
   statement {
     actions = ["sts:AssumeRole"]
 
@@ -19,7 +19,7 @@ data "aws_iam_policy_document" "parse_judgment_assume_role_policy" {
   }
 }
 
-data "aws_iam_policy_document" "parse_judgment_machine_policy" {
+data "aws_iam_policy_document" "court_document_parse_machine_policy" {
   statement {
     actions = [
       "logs:CreateLogDelivery",
@@ -53,38 +53,38 @@ data "aws_iam_policy_document" "parse_judgment_machine_policy" {
     effect  = "Allow"
     actions = ["lambda:InvokeFunction"]
     resources = [
-      aws_lambda_function.parse_judgment.arn
+      aws_lambda_function.court_document_parse.arn
     ]
   }
 }
 
 # Lambda Roles
 
-# Role for the lambda functions in parse_judgment step-function
-resource "aws_iam_role" "parse_judgment_lambda_role" {
+# Role for the lambda functions in court_document_parse step-function
+resource "aws_iam_role" "court_document_parse_lambda_role" {
   name                 = "${var.env}-${var.prefix}-parse-judgment-lambda-role"
   assume_role_policy   = data.aws_iam_policy_document.lambda_assume_role_policy.json
   permissions_boundary = var.tre_permission_boundary_arn
 }
 
-resource "aws_iam_role_policy_attachment" "parse_judgment_lambda_logs" {
-  role       = aws_iam_role.parse_judgment_lambda_role.name
+resource "aws_iam_role_policy_attachment" "court_document_parse_lambda_logs" {
+  role       = aws_iam_role.court_document_parse_lambda_role.name
   policy_arn = "arn:aws:iam::aws:policy/AWSOpsWorksCloudWatchLogs"
 }
 
 # Role for the parse-judgment step-function trigger
-resource "aws_iam_role" "parse_judgment_trigger" {
-  name                 = "${var.env}-${var.prefix}-parse-judgment-trigger-lambda-role"
+resource "aws_iam_role" "court_document_parse_trigger" {
+  name                 = "${var.env}-${var.prefix}-court-document-parse-trigger-lambda-role"
   assume_role_policy   = data.aws_iam_policy_document.lambda_assume_role_policy.json
   permissions_boundary = var.tre_permission_boundary_arn
   inline_policy {
-    name   = "${var.env}-${var.prefix}-parse-judgment-trigger"
-    policy = data.aws_iam_policy_document.parse_judgment_trigger.json
+    name   = "${var.env}-${var.prefix}-court-document-parse-trigger"
+    policy = data.aws_iam_policy_document.court_document_parse_trigger.json
   }
 }
 
-resource "aws_iam_role_policy_attachment" "parse_judgment_sqs_lambda_trigger" {
-  role       = aws_iam_role.parse_judgment_trigger.name
+resource "aws_iam_role_policy_attachment" "court_document_parse_sqs_lambda_trigger" {
+  role       = aws_iam_role.court_document_parse_trigger.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
 }
 
@@ -101,17 +101,17 @@ data "aws_iam_policy_document" "lambda_assume_role_policy" {
   }
 }
 
-data "aws_iam_policy_document" "parse_judgment_trigger" {
+data "aws_iam_policy_document" "court_document_parse_trigger" {
   statement {
     actions   = ["states:StartExecution"]
     effect    = "Allow"
-    resources = [aws_sfn_state_machine.parse_judgment.arn]
+    resources = [aws_sfn_state_machine.court_document_parse.arn]
   }
 }
 
 # SQS Polciy
 
-data "aws_iam_policy_document" "tre_parse_judgment_in_queue" {
+data "aws_iam_policy_document" "tre_court_document_parse_in_queue" {
   statement {
     actions = ["sqs:SendMessage"]
     effect  = "Allow"
@@ -122,7 +122,29 @@ data "aws_iam_policy_document" "tre_parse_judgment_in_queue" {
       ]
     }
     resources = [
-      aws_sqs_queue.tre_parse_judgment_in.arn
+      aws_sqs_queue.tre_court_document_parse_in.arn
     ]
   }
+}
+
+
+resource  "aws_iam_policy" "parser_lambda_s3_policy" {
+  name        = "${var.env}-${var.prefix}-parser-lambda-s3-bucket-input-read"
+  description = "Policy allowing parser lambda s3-bucket-input read"
+  policy      =  data.aws_iam_policy_document.read_s3-bucket-input.json
+}
+
+data "aws_iam_policy_document" "read_s3-bucket-input" {
+  statement {
+    effect =  "Allow"
+    actions   = ["s3:GetObject"]
+    resources = [
+      "arn:aws:s3:::${var.parse_s3_bucket_input}",
+      "arn:aws:s3:::${var.parse_s3_bucket_input}/*"
+    ]
+  }
+}
+resource "aws_iam_role_policy_attachment" "court_document_lambda_s3_input" {
+  role      = aws_iam_role.court_document_parse_lambda_role.name
+  policy_arn = aws_iam_policy.parser_lambda_s3_policy.arn
 }
