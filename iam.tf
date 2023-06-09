@@ -139,7 +139,8 @@ data "aws_iam_policy_document" "read_s3-bucket-input" {
     effect =  "Allow"
     actions   = ["s3:GetObject"]
     resources = [
-      "arn:aws:s3:::${var.parse_s3_bucket_input}"
+      "arn:aws:s3:::${var.parse_s3_bucket_input}",
+      "arn:aws:s3:::${var.parse_s3_bucket_input}/*"
     ]
   }
 }
