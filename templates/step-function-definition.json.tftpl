@@ -1,7 +1,45 @@
 {
-  "Comment": "A description of my state machine",
-  "StartAt": "Parse Court Document",
+  "Comment": "Prepares parser parameters from TRE msg, runs parser & emits TRE msgs for success/failure",
+  "StartAt": "Prepare output parameters",
   "States": {
+    "Prepare output parameters": {
+      "Type": "Pass",
+      "Parameters": {
+        "required": {
+          "parameters": {
+            "reference.$": "$.parameters.reference",
+            "s3FolderName.$": "States.Format('court-documents/{}/{}/', $.parameters.reference, $.properties.executionId)",
+            "s3Bucket": "${tre_data_bucket}"
+          }
+        },
+        "optional": {
+          "parameters": {}
+        }
+      },
+      "Next": "Check optional output parameter",
+      "ResultPath": "$.output"
+    },
+    "Check optional output parameter": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.parameters.originator",
+          "IsPresent": true,
+          "Next": "Pass optional output parameter"
+        }
+      ],
+      "Default": "Parse Court Document"
+    },
+    "Pass optional output parameter": {
+      "Type": "Pass",
+      "Next": "Parse Court Document",
+      "Parameters": {
+        "parameters": {
+          "originator.$": "$.parameters.originator"
+        }
+      },
+      "ResultPath": "$.output.optional"
+    },
     "Parse Court Document": {
       "Type": "Task",
       "Resource": "arn:aws:states:::lambda:invoke",
@@ -18,7 +56,7 @@
           "parser-inputs": {
             "consignment-reference.$": "$.parameters.reference",
             "s3-bucket": "${tre_data_bucket}",
-            "s3-input-bucket.$" : "$.parameters.s3Bucket",
+            "s3-input-bucket.$": "$.parameters.s3Bucket",
             "s3-input-key.$": "$.parameters.s3Key",
             "document-type.$": "$.parameters.parserInstructions.documentType",
             "s3-output-prefix.$": "States.Format('court-documents/{}/{}/', $.parameters.reference, $.properties.executionId)"
@@ -44,7 +82,7 @@
           "ErrorEquals": [
             "States.TaskFailed"
           ],
-          "Next": "Error -> tre-internal",
+          "Next": "Prepare TRE Error",
           "ResultPath": "$.lambda-output.payload.parameters.errors"
         }
       ]
@@ -70,18 +108,14 @@
     "Prepare parser success parameters": {
       "Type": "Pass",
       "Next": "SNS Publish tre-internal",
-      "Parameters": {
-        "status": "COURT_DOCUMENT_PARSE_NO_ERRORS"
-      },
-      "ResultPath": "$.emit-message-parameters"
+      "Parameters": "COURT_DOCUMENT_PARSE_NO_ERRORS",
+      "ResultPath": "$.output.required.parameters.status"
     },
     "Prepare parser error parameters": {
       "Type": "Pass",
       "Next": "SNS Publish tre-internal",
-      "Parameters": {
-        "status": "COURT_DOCUMENT_PARSE_WITH_ERRORS"
-      },
-      "ResultPath": "$.emit-message-parameters"
+      "Parameters": "COURT_DOCUMENT_PARSE_WITH_ERRORS",
+      "ResultPath": "$.output.required.parameters.status"
     },
     "Unhandled Error Prep": {
       "Type": "Pass",
@@ -94,10 +128,21 @@
           }
         },
         "parameters.$": "$.parameters",
-        "properties.$": "$.properties"
+        "properties.$": "$.properties",
+        "output.$": "$.output"
       },
       "ResultPath": "$.temp",
       "OutputPath": "$.temp",
+      "Next": "Prepare TRE Error"
+    },
+    "Prepare TRE Error": {
+      "Type" :"Pass",
+      "Parameters": {
+        "status": "TRE_ERROR",
+        "reference.$": "$.parameters.reference",
+        "errors.$": "$.lambda-output.payload.parameters.errors"
+      },
+      "ResultPath": "$.output.error.parameters",
       "Next": "Error -> tre-internal"
     },
     "SNS Publish tre-internal": {
@@ -113,13 +158,7 @@
             "executionId.$": "$.properties.executionId",
             "parentExecutionId.$": "$.properties.parentExecutionId"
           },
-          "parameters": {
-            "status.$": "$.emit-message-parameters.status",
-            "originator.$": "$.parameters.originator",
-            "s3FolderName.$": "States.Format('court-documents/{}/{}/', $.parameters.reference, $.properties.executionId)",
-            "s3Bucket": "${tre_data_bucket}",
-            "reference.$": "$.parameters.reference"
-          }
+          "parameters.$": "States.JsonMerge($.output.required.parameters, $.output.optional.parameters, false)"
         },
         "TopicArn": "${arn_sns_topic_court_document_parse_out}"
       },
@@ -139,12 +178,7 @@
             "executionId.$": "$.properties.executionId",
             "parentExecutionId.$": "$.properties.parentExecutionId"
           },
-          "parameters": {
-            "status": "TRE_ERROR",
-            "originator.$": "$.parameters.originator",
-            "reference.$": "$.parameters.reference",
-            "errors.$": "$.lambda-output.payload.parameters.errors"
-          }
+          "parameters.$": "States.JsonMerge($.output.error.parameters, $.output.optional.parameters, false)"
         },
         "TopicArn": "${arn_sns_topic_court_document_parse_out}"
       },
@@ -155,7 +189,7 @@
       "Type": "Choice",
       "Choices": [
         {
-          "Variable": "$.emit-message-parameters.status",
+          "Variable": "$.output.required.parameters.status",
           "StringEquals": "COURT_DOCUMENT_PARSE_NO_ERRORS",
           "Next": "Parser success -> Slack"
         }
