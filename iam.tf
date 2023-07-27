@@ -38,6 +38,18 @@ data "aws_iam_policy_document" "court_document_parse_machine_policy" {
 
   statement {
     actions = [
+      "s3:GetObject",
+      "s3:GetObjectTagging",
+      "s3:PutObject",
+      "s3:PutObjectTagging"
+    ]
+
+    effect    = "Allow"
+    resources = ["*"]
+  }
+
+  statement {
+    actions = [
       "xray:PutTraceSegments",
       "xray:PutTelemetryRecords",
       "xray:GetSamplingRules",

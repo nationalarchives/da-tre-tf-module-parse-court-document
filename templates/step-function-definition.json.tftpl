@@ -16,8 +16,26 @@
           "parameters": {}
         }
       },
-      "Next": "Check optional output parameter",
+      "Next": "Save input file to output bucket",
       "ResultPath": "$.output"
+    },
+    "Save input file to output bucket": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:s3:copyObject",
+      "Parameters": {
+        "Bucket.$": "$.output.required.parameters.s3Bucket",
+        "Key.$": "$.output.required.parameters.s3FolderName",
+        "CopySource.$": "States.Format('{}/{}',$.parameters.s3Bucket,$.parameters.s3Key)"
+      },
+      "Catch" : [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "Check optional output parameter",
+          "ResultPath": null
+        }
+      ],
+      "ResultPath": null,
+      "Next": "Check optional output parameter"
     },
     "Check optional output parameter": {
       "Type": "Choice",
