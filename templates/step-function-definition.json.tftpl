@@ -8,7 +8,7 @@
         "required": {
           "parameters": {
             "reference.$": "$.parameters.reference",
-            "s3FolderName.$": "States.Format('court-documents/{}/{}/', $.parameters.reference, $.properties.executionId)",
+            "s3FolderName.$": "States.Format('court-documents/{}/{}', $.parameters.reference, $.properties.executionId)",
             "s3Bucket": "${tre_data_bucket}"
           }
         },
