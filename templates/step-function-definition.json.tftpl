@@ -24,7 +24,7 @@
       "Resource": "arn:aws:states:::aws-sdk:s3:copyObject",
       "Parameters": {
         "Bucket.$": "$.output.required.parameters.s3Bucket",
-        "Key.$":"States.Format('{}{}', $.output.required.parameters.s3FolderName, States.ArrayGetItem(States.StringSplit($.parameters.s3Key, '/'), States.MathAdd(States.ArrayLength(States.StringSplit($.parameters.s3Key, '/')), -1)))",
+        "Key.$":"States.Format('{}/{}', $.output.required.parameters.s3FolderName, States.ArrayGetItem(States.StringSplit($.parameters.s3Key, '/'), States.MathAdd(States.ArrayLength(States.StringSplit($.parameters.s3Key, '/')), -1)))",
         "CopySource.$": "States.Format('{}/{}',$.parameters.s3Bucket,$.parameters.s3Key)"
       },
       "Catch" : [
