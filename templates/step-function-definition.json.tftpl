@@ -1,8 +1,19 @@
 {
   "Comment": "Prepares parser parameters from TRE msg, runs parser & emits TRE msgs for success/failure",
-  "StartAt": "Prepare output parameters",
+  "StartAt": "Determine working folder",
   "States": {
-    "Prepare output parameters": {
+    "Determine working folder": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.parameters.originator",
+          "StringEquals": "TDR",
+          "Next": "Derive existing working folder"
+        }
+      ],
+      "Default": "Construct new working folder"
+    },
+    "Construct new working folder": {
       "Type": "Pass",
       "Parameters": {
         "required": {
@@ -16,20 +27,39 @@
           "parameters": {}
         }
       },
-      "Next": "Save input file to output bucket",
+      "Next": "Save input file to working folder",
       "ResultPath": "$.output"
     },
-    "Save input file to output bucket": {
+    "Derive existing working folder": {
+      "Type": "Pass",
+      "Parameters": {
+        "required": {
+          "parameters": {
+            "reference.$": "$.parameters.reference",
+            "s3Bucket.$": "$.parameters.s3Bucket",
+            "s3FolderName.$": "States.Format('{}/{}/{}', States.ArrayGetItem(States.StringSplit($.parameters.s3Key, '/'), 0), States.ArrayGetItem(States.StringSplit($.parameters.s3Key, '/'), 1), States.ArrayGetItem(States.StringSplit($.parameters.s3Key, '/'), 2))"
+          }
+        },
+        "optional": {
+          "parameters": {}
+        }
+      },
+      "Next": "Check optional output parameter",
+      "ResultPath": "$.output"
+    },
+    "Save input file to working folder": {
       "Type": "Task",
       "Resource": "arn:aws:states:::aws-sdk:s3:copyObject",
       "Parameters": {
         "Bucket.$": "$.output.required.parameters.s3Bucket",
-        "Key.$":"States.Format('{}/{}', $.output.required.parameters.s3FolderName, States.ArrayGetItem(States.StringSplit($.parameters.s3Key, '/'), States.MathAdd(States.ArrayLength(States.StringSplit($.parameters.s3Key, '/')), -1)))",
+        "Key.$": "States.Format('{}/data/{}', $.output.required.parameters.s3FolderName, States.ArrayGetItem(States.StringSplit($.parameters.s3Key, '/'), States.MathAdd(States.ArrayLength(States.StringSplit($.parameters.s3Key, '/')), -1)))",
         "CopySource.$": "States.Format('{}/{}',$.parameters.s3Bucket,$.parameters.s3Key)"
       },
-      "Catch" : [
+      "Catch": [
         {
-          "ErrorEquals": ["States.ALL"],
+          "ErrorEquals": [
+            "States.ALL"
+          ],
           "Next": "Check optional output parameter",
           "ResultPath": null
         }
@@ -77,7 +107,7 @@
             "s3-input-bucket.$": "$.parameters.s3Bucket",
             "s3-input-key.$": "$.parameters.s3Key",
             "document-type.$": "$.parameters.parserInstructions.documentType",
-            "s3-output-prefix.$": "States.Format('court-documents/{}/{}/', $.parameters.reference, $.properties.executionId)"
+            "s3-output-prefix.$": "States.Format('{}/', $.output.required.parameters.s3FolderName)"
           }
         },
         "FunctionName": "${arn_lambda_court_document_parse}"
@@ -154,7 +184,7 @@
       "Next": "Prepare TRE Error"
     },
     "Prepare TRE Error": {
-      "Type" :"Pass",
+      "Type": "Pass",
       "Parameters": {
         "status": "TRE_ERROR",
         "reference.$": "$.parameters.reference",
