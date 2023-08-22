@@ -36,8 +36,8 @@
         "required": {
           "parameters": {
             "reference.$": "$.parameters.reference",
-            "s3Bucket": "${tre_data_bucket}",
-            "s3FolderName.$": "States.ArrayGetItem(States.StringSplit($.parameters.s3Key, '/data/'), 0)"
+            "s3Bucket.$": "$.parameters.s3Bucket",
+            "s3FolderName.$": "States.Format('{}/{}/{}', States.ArrayGetItem(States.StringSplit($.parameters.s3Key, '/'), 0), States.ArrayGetItem(States.StringSplit($.parameters.s3Key, '/'), 1), States.ArrayGetItem(States.StringSplit($.parameters.s3Key, '/'), 2))"
           }
         },
         "optional": {
@@ -45,7 +45,7 @@
         }
       },
       "Next": "Check optional output parameter",
-      "ResultPath": "$.output.required.parameters.s3FolderName"
+      "ResultPath": "$.output"
     },
     "Save input file to working folder": {
       "Type": "Task",
