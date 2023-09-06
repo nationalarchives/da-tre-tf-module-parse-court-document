@@ -124,7 +124,7 @@
           "BackoffRate": 2
         }
       ],
-      "Next": "Check for parser errors",
+      "Next": "Save parser outputs to s3",
       "Catch": [
         {
           "ErrorEquals": [
@@ -134,6 +134,17 @@
           "ResultPath": "$.lambda-output.payload.parameters.errors"
         }
       ]
+    },
+    "Save parser outputs to s3": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:s3:putObject",
+      "Parameters": {
+        "Bucket.$": "$.output.required.parameters.s3Bucket",
+        "Key.$": "States.Format('{}/{}', $.output.required.parameters.s3FolderName, 'parser-outputs.json')",
+        "Body.$": "$.parser-outputs"
+      },
+      "Next": "Check for parser errors",
+      "ResultPath": null
     },
     "Check for parser errors": {
       "Type": "Choice",
