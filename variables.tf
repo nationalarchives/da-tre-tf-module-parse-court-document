@@ -33,8 +33,8 @@ variable "court_document_parse_image_versions" {
   })
 }
 
-variable "common_tre_internal_topic_arn" {
-  description = "The TRE out SNS topic ARN"
+variable "common_da_eventbus_topic_arn" {
+  description = "The DA eventbus SNS topic ARN"
   type        = string
 }
 
