@@ -33,8 +33,8 @@ variable "court_document_parse_image_versions" {
   })
 }
 
-variable "common_da_eventbus_topic_arn" {
-  description = "The DA eventbus SNS topic ARN"
+variable "notification_topic_arn" {
+  description = "The ARN of the SNS topic to notify"
   type        = string
 }
 
