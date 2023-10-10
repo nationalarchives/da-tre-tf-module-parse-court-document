@@ -166,13 +166,13 @@
     },
     "Prepare parser success parameters": {
       "Type": "Pass",
-      "Next": "SNS Publish tre-internal",
+      "Next": "SNS Publish Notification Topic",
       "Parameters": "COURT_DOCUMENT_PARSE_NO_ERRORS",
       "ResultPath": "$.output.required.parameters.status"
     },
     "Prepare parser error parameters": {
       "Type": "Pass",
-      "Next": "SNS Publish tre-internal",
+      "Next": "SNS Publish Notification Topic",
       "Parameters": "COURT_DOCUMENT_PARSE_WITH_ERRORS",
       "ResultPath": "$.output.required.parameters.status"
     },
@@ -202,9 +202,9 @@
         "errors.$": "$.lambda-output.payload.parameters.errors"
       },
       "ResultPath": "$.output.error.parameters",
-      "Next": "Error -> tre-internal"
+      "Next": "Error -> Notification Topic"
     },
-    "SNS Publish tre-internal": {
+    "SNS Publish Notification Topic": {
       "Type": "Task",
       "Resource": "arn:aws:states:::sns:publish",
       "Parameters": {
@@ -224,7 +224,7 @@
       "Next": "Choose slack message",
       "ResultPath": null
     },
-    "Error -> tre-internal": {
+    "Error -> Notification Topic": {
       "Type": "Task",
       "Resource": "arn:aws:states:::sns:publish",
       "Parameters": {
