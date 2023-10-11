@@ -168,15 +168,19 @@ resource  "aws_iam_policy" "parser_lambda_s3_policy" {
 }
 
 data "aws_iam_policy_document" "read_s3-bucket-input" {
-  statement {
-    effect =  "Allow"
-    actions   = ["s3:GetObject"]
-    resources = [
-      "arn:aws:s3:::${var.parse_s3_bucket_input}",
-      "arn:aws:s3:::${var.parse_s3_bucket_input}/*"
-    ]
+  dynamic "statement" {
+    for_each = var.parse_s3_bucket_input
+    content {
+      effect    = "Allow"
+      actions   = ["s3:GetObject"]
+      resources = [
+        "arn:aws:s3:::${statement.value}",
+        "arn:aws:s3:::${statement.value}/*"
+      ]
+    }
   }
 }
+
 resource "aws_iam_role_policy_attachment" "court_document_lambda_s3_input" {
   role      = aws_iam_role.court_document_parse_lambda_role.name
   policy_arn = aws_iam_policy.parser_lambda_s3_policy.arn
