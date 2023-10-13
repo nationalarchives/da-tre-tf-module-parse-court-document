@@ -64,6 +64,11 @@ variable "tre_data_bucket" {
 }
 
 variable "parse_s3_bucket_input" {
-  description = "The s3 input bucket "
-  type        = string
+  description = "Allowable s3 input buckets for parser"
+  type        = list(string)
+}
+
+variable "s3_bucket_kms_arns" {
+  description = "arns of kms for buckets parser lambda will read from (sample data bucket used in tests, and in future fcl input bucket) "
+  type        = list(string)
 }
