@@ -1,5 +1,5 @@
 resource "aws_lambda_function" "court_document_parse" {
-  image_uri     = "${var.ecr_uri_host}/lambda_functions/${var.prefix}-run-judgment-parser:${var.court_document_parse_image_versions.tre_court_document_parse}"
+  image_uri     = "${var.ecr_uri_host}/tre-v2/tna-judgments-parser:${var.court_document_parse_image_versions.tre_court_document_parse}"
   package_type  = "Image"
   function_name = local.lambda_name_court_document_parse
   role          = aws_iam_role.court_document_parse_lambda_role.arn
