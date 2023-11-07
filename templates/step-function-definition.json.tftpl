@@ -239,7 +239,7 @@
           },
           "parameters.$": "States.JsonMerge($.output.error.parameters, $.output.optional.parameters, false)"
         },
-        "TopicArn": "${notification_topic_arn}"
+        "TopicArn": "${arn_sns_topic_court_document_parse_out}"
       },
       "Next": "TRE Error -> Slack",
       "ResultPath": null
