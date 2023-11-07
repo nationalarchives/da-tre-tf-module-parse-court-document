@@ -225,12 +225,12 @@
       "ResultPath": null
     },
     "Error -> Notification Topic": {
-      "Type": "Task",
+      "Type": "Task",git bran
       "Resource": "arn:aws:states:::sns:publish",
       "Parameters": {
         "Message": {
           "properties": {
-            "messageType": "uk.gov.nationalarchives.tre.messages.Error",
+            "messageType": ""uk.gov.nationalarchives.tre.messages.treerror.TreError"",
             "timestamp.$": "$$.State.EnteredTime",
             "function": "tre-tf-module-judgment-parser",
             "producer": "TRE",
@@ -239,7 +239,7 @@
           },
           "parameters.$": "States.JsonMerge($.output.error.parameters, $.output.optional.parameters, false)"
         },
-        "TopicArn": "${arn_sns_topic_court_document_parse_out}"
+        "TopicArn": "${notification_topic_arn}"
       },
       "Next": "TRE Error -> Slack",
       "ResultPath": null
