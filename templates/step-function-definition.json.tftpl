@@ -260,12 +260,23 @@
       "Resource": "arn:aws:states:::sns:publish",
       "Parameters": {
         "Message": {
-          "Execution.$": "$$.Execution.Name",
-          "StateMachine.$": "$$.StateMachine.Name",
-          "Status": "success",
-          "Event": "Parse Court Document"
+          "properties": {
+            "messageType": "uk.gov.nationalarchives.tre.messages.treerror.TreError",
+            "timestamp.$": "$$.State.EnteredTime",
+            "function": "tre-tf-module-judgment-parser",
+            "producer": "TRE",
+            "executionId.$": "$.properties.executionId",
+            "parentExecutionId.$": "$.properties.parentExecutionId"
+          },
+          "parameters": {
+            "status": "COURT_DOCUMENT_PARSE_NO_ERRORS",
+            "originator.$": "$.parameters.originator",
+            "s3FolderName.$": "$.output.required.parameters.s3FolderName",
+            "s3Bucket.$": "$.parameters.s3Bucket",
+            "reference.$": "$.parameters.reference"
+          }
         },
-        "TopicArn": "${arn_sns_topic_tre_slack_alerts}"
+        "TopicArn": "${arn_sns_topic_court_document_parse_out}"
       },
       "Next": "Success"
     },
@@ -276,14 +287,23 @@
       "Type": "Task",
       "Resource": "arn:aws:states:::sns:publish",
       "Parameters": {
-        "TopicArn": "${arn_sns_topic_tre_slack_alerts}",
         "Message": {
-          "Execution.$": "$$.Execution.Name",
-          "StateMachine.$": "$$.StateMachine.Name",
-          "Status": "error",
-          "ErrorMessage.$": "$.lambda-output.payload.parameters.errors",
-          "Event": "TRE Error (Parse Court Document)"
-        }
+          "properties": {
+            "messageType": "uk.gov.nationalarchives.tre.messages.treerror.TreError",
+            "timestamp.$": "$$.State.EnteredTime",
+            "function": "tre-tf-module-judgment-parser",
+            "producer": "TRE",
+            "executionId.$": "$.properties.executionId",
+            "parentExecutionId.$": "$.properties.parentExecutionId"
+          },
+          "parameters": {
+            "status": "TRE_ERROR",
+            "originator.$": "$.parameters.originator",
+            "reference.$": "$.parameters.reference",
+            "errors.$": "$.parser-outputs.error-messages[0]"
+          }
+        },
+        "TopicArn": "${arn_sns_topic_court_document_parse_out}"
       },
       "Next": "Failed"
     },
@@ -295,13 +315,22 @@
       "Resource": "arn:aws:states:::sns:publish",
       "Parameters": {
         "Message": {
-          "Execution.$": "$$.Execution.Name",
-          "StateMachine.$": "$$.StateMachine.Name",
-          "Status": "error",
-          "ErrorMessage.$": "$.parser-outputs.error-messages",
-          "Event": "Parse Court Document Error"
+          "properties": {
+            "messageType": "uk.gov.nationalarchives.tre.messages.treerror.TreError",
+            "timestamp.$": "$$.State.EnteredTime",
+            "function": "tre-tf-module-judgment-parser",
+            "producer": "TRE",
+            "executionId.$": "$.properties.executionId",
+            "parentExecutionId.$": "$.properties.parentExecutionId"
+          },
+          "parameters": {
+            "status": "TRE_ERROR",
+            "originator.$": "$.parameters.originator",
+            "reference.$": "$.parameters.reference",
+            "errors.$": "$.parser-outputs.error-messages[0]"
+          }
         },
-        "TopicArn": "${arn_sns_topic_tre_slack_alerts}"
+        "TopicArn": "${arn_sns_topic_court_document_parse_out}"
       },
       "Next": "Success"
     }
