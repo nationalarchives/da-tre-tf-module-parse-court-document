@@ -221,7 +221,7 @@
         },
         "TopicArn": "${arn_sns_topic_court_document_parse_out}"
       },
-      "Next": "Choose slack message",
+      "Next": "Success",
       "ResultPath": null
     },
     "Error -> Notification Topic": {
@@ -241,98 +241,14 @@
         },
         "TopicArn": "${arn_sns_topic_court_document_parse_out}"
       },
-      "Next": "TRE Error -> Slack",
+      "Next": "Failed",
       "ResultPath": null
-    },
-    "Choose slack message": {
-      "Type": "Choice",
-      "Choices": [
-        {
-          "Variable": "$.output.required.parameters.status",
-          "StringEquals": "COURT_DOCUMENT_PARSE_NO_ERRORS",
-          "Next": "Parser success -> Slack"
-        }
-      ],
-      "Default": "Parser error -> Slack"
-    },
-    "Parser success -> Slack": {
-      "Type": "Task",
-      "Resource": "arn:aws:states:::sns:publish",
-      "Parameters": {
-        "Message": {
-          "properties": {
-            "messageType": "uk.gov.nationalarchives.tre.messages.courtdocument.parse.CourtDocumentParse",
-            "timestamp.$": "$$.State.EnteredTime",
-            "function": "tre-tf-module-judgment-parser",
-            "producer": "TRE",
-            "executionId.$": "$.properties.executionId",
-            "parentExecutionId.$": "$.properties.parentExecutionId"
-          },
-          "parameters": {
-            "status": "COURT_DOCUMENT_PARSE_NO_ERRORS",
-            "originator.$": "$.parameters.originator",
-            "s3FolderName.$": "$.output.required.parameters.s3FolderName",
-            "s3Bucket.$": "$.parameters.s3Bucket",
-            "reference.$": "$.parameters.reference"
-          }
-        },
-        "TopicArn": "${arn_sns_topic_court_document_parse_out}"
-      },
-      "Next": "Success"
     },
     "Success": {
       "Type": "Succeed"
     },
-    "TRE Error -> Slack": {
-      "Type": "Task",
-      "Resource": "arn:aws:states:::sns:publish",
-      "Parameters": {
-        "Message": {
-          "properties": {
-            "messageType": "uk.gov.nationalarchives.tre.messages.treerror.TreError",
-            "timestamp.$": "$$.State.EnteredTime",
-            "function": "tre-tf-module-judgment-parser",
-            "producer": "TRE",
-            "executionId.$": "$.properties.executionId",
-            "parentExecutionId.$": "$.properties.parentExecutionId"
-          },
-          "parameters": {
-            "status": "TRE_ERROR",
-            "originator.$": "$.parameters.originator",
-            "reference.$": "$.parameters.reference",
-            "errors.$": "$.parser-outputs.error-messages[0]"
-          }
-        },
-        "TopicArn": "${arn_sns_topic_court_document_parse_out}"
-      },
-      "Next": "Failed"
-    },
     "Failed": {
       "Type": "Fail"
-    },
-    "Parser error -> Slack": {
-      "Type": "Task",
-      "Resource": "arn:aws:states:::sns:publish",
-      "Parameters": {
-        "Message": {
-          "properties": {
-            "messageType": "uk.gov.nationalarchives.tre.messages.treerror.TreError",
-            "timestamp.$": "$$.State.EnteredTime",
-            "function": "tre-tf-module-judgment-parser",
-            "producer": "TRE",
-            "executionId.$": "$.properties.executionId",
-            "parentExecutionId.$": "$.properties.parentExecutionId"
-          },
-          "parameters": {
-            "status": "TRE_ERROR",
-            "originator.$": "$.parameters.originator",
-            "reference.$": "$.parameters.reference",
-            "errors.$": "$.parser-outputs.error-messages[0]"
-          }
-        },
-        "TopicArn": "${arn_sns_topic_court_document_parse_out}"
-      },
-      "Next": "Success"
     }
   }
 }
