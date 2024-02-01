@@ -221,7 +221,7 @@
         },
         "TopicArn": "${arn_sns_topic_court_document_parse_out}"
       },
-      "Next": "Choose slack message",
+      "Next": "Success",
       "ResultPath": null
     },
     "Error -> Notification Topic": {
@@ -241,69 +241,14 @@
         },
         "TopicArn": "${arn_sns_topic_court_document_parse_out}"
       },
-      "Next": "TRE Error -> Slack",
+      "Next": "Failed",
       "ResultPath": null
-    },
-    "Choose slack message": {
-      "Type": "Choice",
-      "Choices": [
-        {
-          "Variable": "$.output.required.parameters.status",
-          "StringEquals": "COURT_DOCUMENT_PARSE_NO_ERRORS",
-          "Next": "Parser success -> Slack"
-        }
-      ],
-      "Default": "Parser error -> Slack"
-    },
-    "Parser success -> Slack": {
-      "Type": "Task",
-      "Resource": "arn:aws:states:::sns:publish",
-      "Parameters": {
-        "Message": {
-          "Execution.$": "$$.Execution.Name",
-          "StateMachine.$": "$$.StateMachine.Name",
-          "Status": "success",
-          "Event": "Parse Court Document"
-        },
-        "TopicArn": "${arn_sns_topic_tre_slack_alerts}"
-      },
-      "Next": "Success"
     },
     "Success": {
       "Type": "Succeed"
     },
-    "TRE Error -> Slack": {
-      "Type": "Task",
-      "Resource": "arn:aws:states:::sns:publish",
-      "Parameters": {
-        "TopicArn": "${arn_sns_topic_tre_slack_alerts}",
-        "Message": {
-          "Execution.$": "$$.Execution.Name",
-          "StateMachine.$": "$$.StateMachine.Name",
-          "Status": "error",
-          "ErrorMessage.$": "$.lambda-output.payload.parameters.errors",
-          "Event": "TRE Error (Parse Court Document)"
-        }
-      },
-      "Next": "Failed"
-    },
     "Failed": {
       "Type": "Fail"
-    },
-    "Parser error -> Slack": {
-      "Type": "Task",
-      "Resource": "arn:aws:states:::sns:publish",
-      "Parameters": {
-        "Message": {
-          "Execution.$": "$$.Execution.Name",
-          "StateMachine.$": "$$.StateMachine.Name",
-          "Status": "error",
-          "ErrorMessage.$": "$.parser-outputs.error-messages",
-          "Event": "Parse Court Document Error"
-        },
-        "TopicArn": "${arn_sns_topic_tre_slack_alerts}"
-      },
-      "Next": "Success"
     }
   }
 }

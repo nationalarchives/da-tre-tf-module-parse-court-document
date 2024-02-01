@@ -14,11 +14,6 @@ variable "account_id" {
   type        = string
 }
 
-variable "common_tre_slack_alerts_topic_arn" {
-  description = "ARN of the Common TRE Slack Alerts SNS Topic"
-  type        = string
-}
-
 variable "court_document_parse_version" {
   description = "Parse Judgment Step Function version (update if Step Function flow or called Lambda function versions change)"
   type        = string
