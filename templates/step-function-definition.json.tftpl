@@ -76,17 +76,28 @@
           "Next": "Pass optional output parameter"
         }
       ],
-      "Default": "Parse Court Document"
+      "Default": "Check optional metadata parameter"
     },
     "Pass optional output parameter": {
       "Type": "Pass",
-      "Next": "Parse Court Document",
+      "Next": "Check optional metadata parameter",
       "Parameters": {
         "parameters": {
           "originator.$": "$.parameters.originator"
         }
       },
       "ResultPath": "$.output.optional"
+    },
+    "Check optional metadata parameter": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.parameters.parserInstructions.metadata",
+          "IsPresent": true,
+          "Next": "Parse Court Document With Metadata Parameter"
+        }
+      ],
+      "Default": "Parse Court Document"
     },
     "Parse Court Document": {
       "Type": "Task",
@@ -108,6 +119,54 @@
             "s3-input-key.$": "$.parameters.s3Key",
             "document-type.$": "$.parameters.parserInstructions.documentType",
             "s3-output-prefix.$": "States.Format('{}/', $.output.required.parameters.s3FolderName)"
+          }
+        },
+        "FunctionName": "${arn_lambda_court_document_parse}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 8,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "Save parser outputs to s3",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.TaskFailed"
+          ],
+          "Next": "Prepare TRE Error",
+          "ResultPath": "$.lambda-output.payload.parameters.errors"
+        }
+      ]
+    },
+    "Parse Court Document With Metadata Parameter": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "ResultSelector": {
+        "xml.$": "$.Payload.parser-outputs.xml",
+        "metadata.$": "$.Payload.parser-outputs.metadata",
+        "images.$": "$.Payload.parser-outputs.images",
+        "log.$": "$.Payload.parser-outputs.log",
+        "error-messages.$": "$.Payload.parser-outputs.error-messages"
+      },
+      "ResultPath": "$.parser-outputs",
+      "Parameters": {
+        "Payload": {
+          "parser-inputs": {
+            "consignment-reference.$": "$.parameters.reference",
+            "s3-bucket": "${tre_data_bucket}",
+            "s3-input-bucket.$": "$.parameters.s3Bucket",
+            "s3-input-key.$": "$.parameters.s3Key",
+            "document-type.$": "$.parameters.parserInstructions.documentType",
+            "s3-output-prefix.$": "States.Format('{}/', $.output.required.parameters.s3FolderName)",
+            "metadata.$": "$.parameters.parserInstructions.metadata"
           }
         },
         "FunctionName": "${arn_lambda_court_document_parse}"
