@@ -105,6 +105,11 @@ resource "aws_iam_role_policy_attachment" "court_document_parse_lambda_key" {
   policy_arn = aws_iam_policy.court_document_parse_lambda_kms_policy.arn
 }
 
+resource "aws_iam_role_policy_attachment" "court_document_parse_step_function_key" {
+  role       = aws_iam_role.court_document_parse.name
+  policy_arn = aws_iam_policy.court_document_parse_lambda_kms_policy.arn
+}
+
 # Role for the parse-judgment step-function trigger
 resource "aws_iam_role" "court_document_parse_trigger" {
   name                 = "${var.env}-${var.prefix}-court-document-parse-trigger-lambda-role"
